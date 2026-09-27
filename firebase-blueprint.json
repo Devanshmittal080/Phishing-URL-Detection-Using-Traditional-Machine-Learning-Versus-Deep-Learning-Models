@@ -1,0 +1,51 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile with authentication and roles",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "role": { "type": "string", "enum": ["analyst", "admin"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email"]
+    },
+    "UrlVerification": {
+      "title": "UrlVerification",
+      "description": "Logged URL verification records including syntax, DNS validity, and phishing prediction",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "url": { "type": "string" },
+        "isSyntacticallyValid": { "type": "boolean" },
+        "syntaxErrors": { "type": "string" },
+        "domain": { "type": "string" },
+        "tld": { "type": "string" },
+        "hasDirectIp": { "type": "boolean" },
+        "hasHomograph": { "type": "boolean" },
+        "entropy": { "type": "number" },
+        "rfPrediction": { "type": "string" },
+        "rfProbability": { "type": "number" },
+        "stage1Verdict": { "type": "string" },
+        "finalVerdict": { "type": "string" },
+        "verifiedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["url", "isSyntacticallyValid", "verifiedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile documents"
+    },
+    "/verifications/{verificationId}": {
+      "schema": "UrlVerification",
+      "description": "User URL checks and security evaluations"
+    }
+  }
+}

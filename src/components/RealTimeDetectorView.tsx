@@ -17,6 +17,7 @@ import {
 import { extractUrlFeatures, evaluateModelsOnUrl } from '../utils/featureExtractor';
 import { SAMPLE_URLS_PRESET } from '../data/dissertationData';
 import { ExtractedFeatures, ModelPrediction } from '../types/phishing';
+import { UrlPrecheck } from './UrlPrecheck';
 
 interface RealTimeDetectorViewProps {
   initialUrl?: string;
@@ -60,6 +61,12 @@ export const RealTimeDetectorView = ({ initialUrl }: RealTimeDetectorViewProps) 
           Enter any URL to execute the 56-feature extraction pipeline, calculate Shannon character entropy, and evaluate side-by-side inference across ML and DL models.
         </p>
       </section>
+
+      {/* URL Syntax Pre-check Option (Independent of Feature Detection) */}
+      <UrlPrecheck
+        currentUrl={inputUrl}
+        onApplyUrl={(validUrl) => setInputUrl(validUrl)}
+      />
 
       {/* Input Box & Presets */}
       <section className="p-6 rounded-xl bg-slate-900/60 border border-slate-800/80 space-y-4">

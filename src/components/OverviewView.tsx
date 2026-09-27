@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   ShieldAlert,
   Zap,
@@ -5,20 +6,45 @@ import {
   Layers,
   CheckCircle2,
   TrendingDown,
+  TrendingUp,
   ArrowRight,
   Database,
   Lock,
   GitCompare,
-  Sparkles
+  Sparkles,
+  History,
+  Info,
+  FileText
 } from 'lucide-react';
-import { DISSERTATION_META, MODEL_BENCHMARKS } from '../data/dissertationData';
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  CartesianGrid
+} from 'recharts';
+import {
+  DISSERTATION_META,
+  MODEL_BENCHMARKS,
+  HISTORICAL_DATASET_EVOLUTION,
+  HistoricalTrendPoint
+} from '../data/dissertationData';
 
 interface OverviewViewProps {
   onNavigate: (tabId: string) => void;
   onSelectSampleUrl: (url: string) => void;
+  onOpenPdfModal?: () => void;
 }
 
-export const OverviewView = ({ onNavigate, onSelectSampleUrl }: OverviewViewProps) => {
+export const OverviewView = ({ onNavigate, onSelectSampleUrl, onOpenPdfModal }: OverviewViewProps) => {
+  const [selectedPoint, setSelectedPoint] = useState<HistoricalTrendPoint>(
+    HISTORICAL_DATASET_EVOLUTION[HISTORICAL_DATASET_EVOLUTION.length - 1]
+  );
+  const [chartMetric, setChartMetric] = useState<'all' | 'rf_vs_dl'>('all');
+
   const rf = MODEL_BENCHMARKS.find((m) => m.id === 'rf')!;
   const distilbert = MODEL_BENCHMARKS.find((m) => m.id === 'distilbert')!;
   const ann = MODEL_BENCHMARKS.find((m) => m.id === 'ann')!;
@@ -45,7 +71,17 @@ export const OverviewView = ({ onNavigate, onSelectSampleUrl }: OverviewViewProp
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2.5">
+            {onOpenPdfModal && (
+              <button
+                onClick={onOpenPdfModal}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-semibold text-cyan-300 hover:text-white bg-slate-900 hover:bg-slate-800 border border-cyan-500/40 hover:border-cyan-400 rounded-lg transition-colors whitespace-nowrap shadow-sm"
+                title="Generate Academic Research PDF Report"
+              >
+                <FileText className="h-4 w-4 text-cyan-400" />
+                <span>Academic PDF</span>
+              </button>
+            )}
             <button
               onClick={() => onNavigate('detector')}
               className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-950 bg-cyan-400 hover:bg-cyan-300 rounded-lg transition-colors whitespace-nowrap shadow-sm"
@@ -168,6 +204,196 @@ export const OverviewView = ({ onNavigate, onSelectSampleUrl }: OverviewViewProp
               View Loss &amp; ROC Curves
             </button>
           </div>
+        </div>
+      </section>
+
+      {/* Historical Performance Evolution: Recharts Interactive Chart */}
+      <section className="p-6 rounded-xl bg-slate-900/60 border border-slate-800/80 space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <History className="h-5 w-5 text-cyan-400" />
+              <h2 className="text-base font-bold text-white">
+                Historical Accuracy Evolution across 2026 Dataset Iterations
+              </h2>
+            </div>
+            <p className="text-xs text-slate-400">
+              Interactive Recharts comparison showing how ML feature engineering matured from lexical alpha to 56-feature gold standard versus Transformers.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-1.5 p-1 bg-slate-950/80 border border-slate-800 rounded-lg">
+            <button
+              onClick={() => setChartMetric('all')}
+              className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                chartMetric === 'all'
+                  ? 'bg-slate-800 text-cyan-400 font-semibold shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              All 4 Model Tracks
+            </button>
+            <button
+              onClick={() => setChartMetric('rf_vs_dl')}
+              className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                chartMetric === 'rf_vs_dl'
+                  ? 'bg-slate-800 text-cyan-400 font-semibold shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              RF vs Transformer Head-to-Head
+            </button>
+          </div>
+        </div>
+
+        {/* Recharts LineChart */}
+        <div className="w-full h-72 sm:h-80 bg-slate-950/80 rounded-xl border border-slate-800/80 p-4">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart
+              data={HISTORICAL_DATASET_EVOLUTION}
+              margin={{ top: 20, right: 30, left: 10, bottom: 10 }}
+              onClick={(e: any) => {
+                if (e && e.activePayload && e.activePayload[0]) {
+                  setSelectedPoint(e.activePayload[0].payload as HistoricalTrendPoint);
+                }
+              }}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+              <XAxis
+                dataKey="releaseDate"
+                stroke="#64748b"
+                tick={{ fill: '#94a3b8', fontSize: 11, fontFamily: 'monospace' }}
+              />
+              <YAxis
+                domain={[96.0, 100.0]}
+                stroke="#64748b"
+                tick={{ fill: '#94a3b8', fontSize: 11, fontFamily: 'monospace' }}
+                unit="%"
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: '#020617',
+                  borderColor: '#334155',
+                  borderRadius: '0.75rem',
+                  color: '#f8fafc',
+                  fontSize: '12px',
+                  fontFamily: 'monospace',
+                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)'
+                }}
+                formatter={(val: any, name: any) => {
+                  const labelMap: Record<string, string> = {
+                    rfAccuracy: 'Random Forest (RF)',
+                    gbdtAccuracy: 'Gradient Boosting (GBDT)',
+                    annAccuracy: 'Neural Net (ANN / MLP)',
+                    transformerAccuracy: 'DistilBERT Transformer'
+                  };
+                  return [`${Number(val).toFixed(2)}%`, labelMap[name] || name];
+                }}
+                labelFormatter={(label: any, payload: any) => {
+                  const pt = payload?.[0]?.payload;
+                  return pt ? `${pt.datasetVersion} (${pt.releaseDate}) · ${pt.featuresUsed} Features` : label;
+                }}
+              />
+              <Legend
+                wrapperStyle={{ fontSize: '11px', fontFamily: 'monospace', paddingTop: '10px' }}
+                formatter={(value: string) => {
+                  const map: Record<string, string> = {
+                    rfAccuracy: 'Random Forest (RF)',
+                    gbdtAccuracy: 'Gradient Boosting (GBDT)',
+                    annAccuracy: 'Neural Net (ANN)',
+                    transformerAccuracy: 'DistilBERT Transformer'
+                  };
+                  return map[value] || value;
+                }}
+              />
+
+              {/* Line 1: Random Forest (Cyan) */}
+              <Line
+                type="monotone"
+                dataKey="rfAccuracy"
+                stroke="#06b6d4"
+                strokeWidth={3}
+                dot={{ r: 5, fill: '#06b6d4', stroke: '#fff', strokeWidth: 1.5 }}
+                activeDot={{ r: 8, stroke: '#06b6d4', strokeWidth: 2 }}
+                name="rfAccuracy"
+              />
+
+              {/* Line 2: DistilBERT Transformer (Pink) */}
+              <Line
+                type="monotone"
+                dataKey="transformerAccuracy"
+                stroke="#ec4899"
+                strokeWidth={2.5}
+                strokeDasharray="4 3"
+                dot={{ r: 5, fill: '#ec4899', stroke: '#fff', strokeWidth: 1.5 }}
+                activeDot={{ r: 8, stroke: '#ec4899', strokeWidth: 2 }}
+                name="transformerAccuracy"
+              />
+
+              {/* Optional lines when 'all' is chosen */}
+              {chartMetric === 'all' && (
+                <>
+                  <Line
+                    type="monotone"
+                    dataKey="gbdtAccuracy"
+                    stroke="#10b981"
+                    strokeWidth={2}
+                    dot={{ r: 4, fill: '#10b981' }}
+                    name="gbdtAccuracy"
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="annAccuracy"
+                    stroke="#8b5cf6"
+                    strokeWidth={2}
+                    dot={{ r: 4, fill: '#8b5cf6' }}
+                    name="annAccuracy"
+                  />
+                </>
+              )}
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Selected Release Milestone Deep-Dive Card */}
+        <div className="p-4 rounded-xl bg-slate-950/70 border border-slate-800 space-y-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-2">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-cyan-400" />
+              <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono">
+                Milestone Focus: {selectedPoint.datasetVersion}
+              </h3>
+            </div>
+            <div className="flex items-center gap-3 text-xs font-mono text-slate-400">
+              <span>Scale: <strong className="text-white">{selectedPoint.urlCount.toLocaleString()} URLs</strong></span>
+              <span aria-hidden="true">·</span>
+              <span>Pipeline: <strong className="text-cyan-400">{selectedPoint.featuresUsed} Features</strong></span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono pt-1">
+            <div className="p-2 rounded bg-slate-900 border border-slate-800 flex justify-between items-center">
+              <span className="text-cyan-400">RF Acc:</span>
+              <span className="text-white font-bold">{selectedPoint.rfAccuracy.toFixed(2)}%</span>
+            </div>
+            <div className="p-2 rounded bg-slate-900 border border-slate-800 flex justify-between items-center">
+              <span className="text-emerald-400">GBDT Acc:</span>
+              <span className="text-white font-bold">{selectedPoint.gbdtAccuracy.toFixed(2)}%</span>
+            </div>
+            <div className="p-2 rounded bg-slate-900 border border-slate-800 flex justify-between items-center">
+              <span className="text-violet-400">ANN Acc:</span>
+              <span className="text-white font-bold">{selectedPoint.annAccuracy.toFixed(2)}%</span>
+            </div>
+            <div className="p-2 rounded bg-slate-900 border border-slate-800 flex justify-between items-center">
+              <span className="text-pink-400">BERT Acc:</span>
+              <span className="text-white font-bold">{selectedPoint.transformerAccuracy.toFixed(2)}%</span>
+            </div>
+          </div>
+
+          <p className="text-xs text-slate-300 font-sans leading-relaxed pt-1">
+            <strong className="text-cyan-300">Phase Finding: </strong>
+            {selectedPoint.description}
+          </p>
         </div>
       </section>
 

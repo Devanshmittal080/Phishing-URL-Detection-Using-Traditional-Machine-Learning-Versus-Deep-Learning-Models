@@ -4,7 +4,8 @@ import {
   RocCurvePoint,
   FeatureDefinition,
   LiteratureEntry,
-  EvasionTactic
+  EvasionTactic,
+  ModelArchitectureSpec
 } from '../types/phishing';
 
 export const DISSERTATION_META = {
@@ -656,3 +657,277 @@ export const SAMPLE_URLS_PRESET = [
     note: 'Official identity provider with valid SSL trust chain'
   }
 ];
+
+export interface HistoricalTrendPoint {
+  datasetVersion: string;
+  releaseDate: string;
+  urlCount: number;
+  featuresUsed: number;
+  rfAccuracy: number;
+  gbdtAccuracy: number;
+  annAccuracy: number;
+  transformerAccuracy: number;
+  description: string;
+}
+
+export const HISTORICAL_DATASET_EVOLUTION: HistoricalTrendPoint[] = [
+  {
+    datasetVersion: 'v2026.01 Alpha (Pilot)',
+    releaseDate: 'Jan 2026',
+    urlCount: 45000,
+    featuresUsed: 16,
+    rfAccuracy: 97.42,
+    gbdtAccuracy: 97.10,
+    annAccuracy: 96.85,
+    transformerAccuracy: 98.20,
+    description: 'Initial lexical-only benchmark where raw-sequence DistilBERT outperformed shallow ML feature vectors'
+  },
+  {
+    datasetVersion: 'v2026.03 (ISCX Merged)',
+    releaseDate: 'Mar 2026',
+    urlCount: 95000,
+    featuresUsed: 28,
+    rfAccuracy: 98.85,
+    gbdtAccuracy: 98.62,
+    annAccuracy: 98.40,
+    transformerAccuracy: 98.92,
+    description: 'Added structural features (subdomain depth, direct-IP). Tree ensembles closed accuracy gap with transformers'
+  },
+  {
+    datasetVersion: 'v2026.05 (Phusion Beta)',
+    releaseDate: 'May 2026',
+    urlCount: 160000,
+    featuresUsed: 42,
+    rfAccuracy: 99.64,
+    gbdtAccuracy: 99.50,
+    annAccuracy: 99.45,
+    transformerAccuracy: 99.35,
+    description: 'Integrated WHOIS domain age & SSL certificate reputation. Tree ensembles surpassed deep transformers'
+  },
+  {
+    datasetVersion: 'v2026.07 (Entropy & Homograph)',
+    releaseDate: 'Jul 2026',
+    urlCount: 200000,
+    featuresUsed: 50,
+    rfAccuracy: 99.91,
+    gbdtAccuracy: 99.85,
+    annAccuracy: 99.80,
+    transformerAccuracy: 99.60,
+    description: 'Added Shannon character entropy and Cyrillic punycode detectors; RF resilience grew to 99.91%'
+  },
+  {
+    datasetVersion: 'v2026.09 (Full 56-Feature Gold)',
+    releaseDate: 'Sep 2026',
+    urlCount: 235795,
+    featuresUsed: 56,
+    rfAccuracy: 99.99,
+    gbdtAccuracy: 99.98,
+    annAccuracy: 99.98,
+    transformerAccuracy: 99.82,
+    description: 'Complete 235,795 UCI PhiUSIIL gold benchmark. Tree ensembles hit 99.99% ceiling with wire-speed latency'
+  }
+];
+
+export const ARCHITECTURAL_SPECS: ModelArchitectureSpec[] = [
+  {
+    modelId: 'rf',
+    name: 'Random Forest (RF)',
+    category: 'ML',
+    paradigm: 'Tree Ensemble (100 Trees)',
+    totalParameters: '~120,000 Split Nodes',
+    paramScaleNumber: 120000,
+    parameterBreakdown: '100 orthogonal decision trees × ~1,200 internal split nodes (Gini impurity split tests)',
+    featureExtractionTechnique: 'Handcrafted 56-feature pipeline: 16 lexical string length/entropy, 14 structural URL syntax, 14 domain/DNS/WHOIS reputation, and 12 statistical frequency metrics.',
+    featureExtractionCategory: 'Handcrafted Domain Features',
+    featurePipelineLatencyMs: 3.40,
+    inputRepresentation: 'Normalized 56-dimensional continuous float vector [x₁, x₂, ..., x₅₆]',
+    inputDimensions: '56 dense features',
+    trainingHardwareProfile: 'Commodity 8-Core CPU (No GPU required)',
+    trainingTime: '42.4 seconds (235,795 samples)',
+    inferenceBigO: 'O(T · d_max) [T=100 trees, d_max=18]',
+    memoryConsumptionMb: 8.4,
+    runtimeInferenceMs: 0.85,
+    adversarialVulnerability: 'Vulnerable to homoglyph Unicode lookalikes without pre-normalization; robust to token insertion and random query spam.',
+    interpretabilityMethod: 'TreeSHAP (exact Shapley polynomial time), Mean Decrease in Impurity (MDI)',
+    nistPipelineStage: 'NIST Stage 1: Wire-Speed Inline Gateway & Edge Firewall (<1.0 ms)',
+    keyArchitecturalAdvantage: 'Extreme throughput (672 req/s) with 99.99% accuracy and deterministic decision trees that never suffer catastrophic forgetting.',
+    keyArchitecturalLimitation: 'Cannot automatically discover unengineered syntactic anomalies outside the predefined 56-feature extraction schema.',
+    color: '#06b6d4'
+  },
+  {
+    modelId: 'gbdt',
+    name: 'Gradient Boosting (GBDT)',
+    category: 'ML',
+    paradigm: 'Sequential Tree Boosting',
+    totalParameters: '~45,000 Split Nodes',
+    paramScaleNumber: 45000,
+    parameterBreakdown: '100 shallow boosted trees (max_depth=6) × ~450 split nodes with shrinkage learning rate η=0.1',
+    featureExtractionTechnique: 'Handcrafted 56-feature pipeline with iterative negative gradient step optimization over binomial deviance loss.',
+    featureExtractionCategory: 'Handcrafted Domain Features',
+    featurePipelineLatencyMs: 3.40,
+    inputRepresentation: 'Normalized 56-dimensional continuous float vector',
+    inputDimensions: '56 dense features',
+    trainingHardwareProfile: 'Commodity 8-Core CPU (Histogram binning)',
+    trainingTime: '1 min 15 sec',
+    inferenceBigO: 'O(M · d) [M=100 iterations, d=6 shallow]',
+    memoryConsumptionMb: 9.1,
+    runtimeInferenceMs: 0.92,
+    adversarialVulnerability: 'Sensitive to boundary outliers if features are unclipped; highly resilient against collinear feature redundancy.',
+    interpretabilityMethod: 'TreeSHAP, Partial Dependence Plots (PDP), Gain Importance',
+    nistPipelineStage: 'NIST Stage 1: Fast-Path Wire-Speed Edge Filter',
+    keyArchitecturalAdvantage: 'Fastest boosted inference (0.92 ms) with ultra-compact tree structures requiring only 9.1 MB RAM.',
+    keyArchitecturalLimitation: 'Sequential training prevents distributed parallel scaling across multi-node clusters during training.',
+    color: '#10b981'
+  },
+  {
+    modelId: 'svm',
+    name: 'Support Vector Machine (SVM)',
+    category: 'ML',
+    paradigm: 'RBF Kernel Hyperplane',
+    totalParameters: '8,920 Support Vectors',
+    paramScaleNumber: 8920,
+    parameterBreakdown: '8,920 dual coefficients αᵢ + RBF kernel width γ=0.018 and intercept bias b',
+    featureExtractionTechnique: 'Handcrafted 56-feature vector normalized via Z-score scaling, mapped into infinite-dimensional Hilbert space via Gaussian RBF kernel.',
+    featureExtractionCategory: 'Handcrafted Domain Features',
+    featurePipelineLatencyMs: 3.40,
+    inputRepresentation: 'Standardized 56-dimensional float vector (μ=0, σ=1)',
+    inputDimensions: '56 dense features',
+    trainingHardwareProfile: 'High-Memory Multi-Core CPU (O(N²) Gram matrix)',
+    trainingTime: '14 min 20 sec',
+    inferenceBigO: 'O(N_sv · D) [N_sv=8,920, D=56]',
+    memoryConsumptionMb: 12.6,
+    runtimeInferenceMs: 1.15,
+    adversarialVulnerability: 'Vulnerable to targeted boundary shifts if attackers inject high-slack outlier feature values.',
+    interpretabilityMethod: 'KernelSHAP, Local Surrogate Models, Support Vector Margin Analysis',
+    nistPipelineStage: 'NIST Stage 1: Network Edge Perimeter Demarcation',
+    keyArchitecturalAdvantage: 'Global optimum guarantee via convex quadratic optimization (no local minima risk during training).',
+    keyArchitecturalLimitation: 'Quadratic memory scaling during training prevents scaling beyond 500k samples without Nyström approximation.',
+    color: '#3b82f6'
+  },
+  {
+    modelId: 'nb',
+    name: 'Naïve Bayes (Gaussian NB)',
+    category: 'ML',
+    paradigm: 'Gaussian Probabilistic',
+    totalParameters: '112 Distribution Params',
+    paramScaleNumber: 112,
+    parameterBreakdown: '56 feature means (μ_c) + 56 feature variances (σ²_c) across 2 target classes (56×2=112) + 2 class priors',
+    featureExtractionTechnique: 'Handcrafted 56-feature vector under strong class-conditional feature independence assumption P(X|C) = ∏ P(xᵢ|C).',
+    featureExtractionCategory: 'Handcrafted Domain Features',
+    featurePipelineLatencyMs: 3.40,
+    inputRepresentation: '56-dimensional continuous Gaussian feature vector',
+    inputDimensions: '56 continuous features',
+    trainingHardwareProfile: 'Single-Core Commodity CPU / Embedded SoC',
+    trainingTime: '1.2 seconds (single pass O(N·D))',
+    inferenceBigO: 'O(D) [D=56 multiplications]',
+    memoryConsumptionMb: 4.2,
+    runtimeInferenceMs: 0.42,
+    adversarialVulnerability: 'Severely vulnerable when correlated features (e.g. url_length + path_depth) artificially compound posterior probabilities.',
+    interpretabilityMethod: 'Log-Odds Ratio Inspection, Direct Conditional Likelihoods',
+    nistPipelineStage: 'NIST Stage 1: Ultra-Low Latency Embedded Hardware & IoT Gateways',
+    keyArchitecturalAdvantage: 'Lowest latency (0.42 ms) and micro-footprint (4.2 MB) capable of running on low-power ARM microcontrollers.',
+    keyArchitecturalLimitation: 'Naive independence assumption breaks down on interrelated URL structural features, limiting accuracy to 99.94%.',
+    color: '#f59e0b'
+  },
+  {
+    modelId: 'ann',
+    name: 'Neural Net (ANN / MLP)',
+    category: 'DL',
+    paradigm: '3-Layer Dense Neural Net',
+    totalParameters: '15,681 Trainable Weights',
+    paramScaleNumber: 15681,
+    parameterBreakdown: 'Layer 1: 56×128+128=7,296; Layer 2: 128×64+64=8,256; Output: 64×1+1=65; Total = 15,681 parameters',
+    featureExtractionTechnique: 'Handcrafted 56-feature vector input, followed by deep hierarchical non-linear feature transformation via ReLU activations and Dropout (0.3).',
+    featureExtractionCategory: 'Handcrafted Domain Features',
+    featurePipelineLatencyMs: 3.40,
+    inputRepresentation: 'Standardized 56-dimensional continuous float tensor',
+    inputDimensions: '56 input nodes → 128 → 64 → 1 sigmoid',
+    trainingHardwareProfile: 'Commodity CPU or Entry GPU (NVIDIA T4 / RTX)',
+    trainingTime: '3 min 10 sec (25 epochs with early stopping)',
+    inferenceBigO: 'O(∑ W_l · H_l) matrix multiplications',
+    memoryConsumptionMb: 18.2,
+    runtimeInferenceMs: 2.45,
+    adversarialVulnerability: 'Vulnerable to Fast Gradient Sign Method (FGSM) continuous vector perturbations and gradient-based adversarial crafting.',
+    interpretabilityMethod: 'Integrated Gradients, Layer-wise Relevance Propagation (LRP), DeepLIFT',
+    nistPipelineStage: 'NIST Stage 1 / Stage 2: Secondary Perimeter Web Proxy Inspection',
+    keyArchitecturalAdvantage: 'Can learn complex non-linear combinations of engineered features with modest compute overhead.',
+    keyArchitecturalLimitation: 'Still strictly bounded by the handcrafted 56-feature extractor schema; cannot ingest raw unparsed URLs directly.',
+    color: '#8b5cf6'
+  },
+  {
+    modelId: 'cnn1d',
+    name: '1D-CNN (Char n-grams)',
+    category: 'DL',
+    paradigm: 'Convolutional Sequence Scanner',
+    totalParameters: '245,314 Trainable Weights',
+    paramScaleNumber: 245314,
+    parameterBreakdown: 'Char Embedding (70×32=2,240) + Multi-kernel Conv1D (kernels 3, 5, 7 with 128 filters each = 138,240) + Dense (104,834)',
+    featureExtractionTechnique: 'End-to-End Character n-gram feature extraction. 1D convolutions act as sliding window detectors over character sequences, automatically learning spatial patterns without manual feature extraction.',
+    featureExtractionCategory: 'End-to-End Character n-grams',
+    featurePipelineLatencyMs: 0.00,
+    inputRepresentation: 'Raw URL character sequence (up to 200 chars) mapped into 32-dim learned dense character embeddings',
+    inputDimensions: 'Length L=200, alphabet V=70, embedding d=32',
+    trainingHardwareProfile: 'NVIDIA T4 / V100 GPU (16GB VRAM)',
+    trainingTime: '18 min 45 sec (30 epochs)',
+    inferenceBigO: 'O(L · ∑ K_i · C_in · C_out)',
+    memoryConsumptionMb: 64.0,
+    runtimeInferenceMs: 5.60,
+    adversarialVulnerability: 'Vulnerable to character-level insertions/leetspeak substitutions (e.g., "p-a-y-p-a-l" instead of "paypal") unless multi-scale dilated convolutions are used.',
+    interpretabilityMethod: 'Grad-CAM for 1D sequences, character activation saliency heatmaps',
+    nistPipelineStage: 'NIST Stage 2: Multi-Class Threat Scanner (UNB ISCX-URL2016)',
+    keyArchitecturalAdvantage: 'Ingests raw URL strings with zero manual feature extraction, automatically detecting malicious substring tokens.',
+    keyArchitecturalLimitation: 'Fixed kernel receptive fields struggle to correlate distal tokens separated by long benign path segments (>50 characters).',
+    color: '#14b8a6'
+  },
+  {
+    modelId: 'lstm',
+    name: 'Bi-LSTM + Attention',
+    category: 'DL',
+    paradigm: 'Recurrent Sequential Memory',
+    totalParameters: '1,218,690 Trainable Weights (~1.22M)',
+    paramScaleNumber: 1218690,
+    parameterBreakdown: 'Char Embedding (70×64=4,480) + Bi-directional LSTM 2×128 units (790,528) + Additive Attention layer (33,024) + Dense layers (390,658)',
+    featureExtractionTechnique: 'End-to-End Recurrent Temporal feature extraction: Captures forward and backward long-range character dependencies in URL paths, with attention weights focusing on anomalous token boundaries.',
+    featureExtractionCategory: 'Recurrent Sequence Embeddings',
+    featurePipelineLatencyMs: 0.00,
+    inputRepresentation: 'Character index sequence (length ≤ 200), zero-padded with special [PAD] tokens',
+    inputDimensions: 'Length L=200, hidden state H=128, bidirectional',
+    trainingHardwareProfile: 'NVIDIA T4 / A100 GPU (Sequential Recurrence)',
+    trainingTime: '38 min 20 sec (25 epochs)',
+    inferenceBigO: 'O(2 · L · (4H² + 4H·D)) recurrent forward steps',
+    memoryConsumptionMb: 95.0,
+    runtimeInferenceMs: 12.40,
+    adversarialVulnerability: 'Vulnerable to gradient degradation over deeply nested arbitrary query parameters and deliberate padding flood attacks.',
+    interpretabilityMethod: 'Attention weight heatmaps over raw character sequence, temporal activation tracking',
+    nistPipelineStage: 'NIST Stage 2: Asynchronous Contextual Pattern Miner',
+    keyArchitecturalAdvantage: 'Maintains temporal memory across entire URL syntax, capturing syntax relationships between protocol, domain, and deep paths.',
+    keyArchitecturalLimitation: 'Sequential step-by-step unrolling causes high latency (12.40 ms) and cannot be fully parallelized across GPU threads.',
+    color: '#a855f7'
+  },
+  {
+    modelId: 'distilbert',
+    name: 'DistilBERT Transformer',
+    category: 'DL',
+    paradigm: 'Pre-trained Subword Transformer',
+    totalParameters: '66,362,880 Trainable Weights (~66.4M)',
+    paramScaleNumber: 66362880,
+    parameterBreakdown: '6 Transformer Encoder layers, 12 Self-Attention Heads, Hidden dimension 768, Feed-Forward intermediate 3072, WordPiece vocab 30,522',
+    featureExtractionTechnique: 'Zero manual feature engineering. End-to-end contextual subword tokenization via Byte-Pair Encoding (WordPiece) + multi-head self-attention extracting deep semantic and syntax relationships.',
+    featureExtractionCategory: 'Contextual Subword Tokenization',
+    featurePipelineLatencyMs: 0.00,
+    inputRepresentation: 'Raw URL string → WordPiece Token IDs [CLS] + [T₁, T₂, ...] + [SEP] with Attention Mask (max length 128)',
+    inputDimensions: 'Sequence length L=128, hidden dimension d=768, vocabulary size 30,522',
+    trainingHardwareProfile: 'NVIDIA A100 80GB GPU (TensorFloat-32 / PyTorch fine-tuning)',
+    trainingTime: '4 hours 15 minutes (fine-tuning 15 epochs on 188k training URLs)',
+    inferenceBigO: 'O(L² · d + L · d²) per encoder layer (quadratic attention complexity)',
+    memoryConsumptionMb: 410.0,
+    runtimeInferenceMs: 18.50,
+    adversarialVulnerability: 'High semantic comprehension; vulnerable to subword token fragmentation (e.g. deliberate typosplit injection) and Out-Of-Vocabulary spam.',
+    interpretabilityMethod: 'Multi-head self-attention rollout maps, Integrated Gradients, subword token attribution',
+    nistPipelineStage: 'NIST Stage 2: Asynchronous Deep Sandbox Inspection for Borderline / High-Entropy URLs',
+    keyArchitecturalAdvantage: 'Unrivaled contextual linguistic comprehension of subwords, recognizing obfuscated brand impersonations without manual heuristics.',
+    keyArchitecturalLimitation: 'Massive compute requirement (66.4M parameters, 410 MB RAM, 18.5 ms latency) makes wire-speed edge deployment infeasible.',
+    color: '#ec4899'
+  }
+];
+

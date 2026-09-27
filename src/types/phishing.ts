@@ -22,6 +22,32 @@ export interface ModelMetrics {
   color: string;
 }
 
+export interface ModelArchitectureSpec {
+  modelId: string;
+  name: string;
+  category: 'ML' | 'DL';
+  paradigm: string;
+  totalParameters: string;
+  paramScaleNumber: number; // for visual comparison bar
+  parameterBreakdown: string;
+  featureExtractionTechnique: string;
+  featureExtractionCategory: 'Handcrafted Domain Features' | 'End-to-End Character n-grams' | 'Contextual Subword Tokenization' | 'Recurrent Sequence Embeddings';
+  featurePipelineLatencyMs: number;
+  inputRepresentation: string;
+  inputDimensions: string;
+  trainingHardwareProfile: string;
+  trainingTime: string;
+  inferenceBigO: string;
+  memoryConsumptionMb: number;
+  runtimeInferenceMs: number;
+  adversarialVulnerability: string;
+  interpretabilityMethod: string;
+  nistPipelineStage: string;
+  keyArchitecturalAdvantage: string;
+  keyArchitecturalLimitation: string;
+  color: string;
+}
+
 export interface EpochLossPoint {
   epoch: number;
   trainLoss: number;

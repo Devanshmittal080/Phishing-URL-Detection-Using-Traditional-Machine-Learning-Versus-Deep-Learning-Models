@@ -6,7 +6,11 @@ import { LossMetricsView } from './components/LossMetricsView';
 import { RealTimeDetectorView } from './components/RealTimeDetectorView';
 import { HybridSimulatorView } from './components/HybridSimulatorView';
 import { TaxonomyView } from './components/TaxonomyView';
+import { GeminiChatAssistant } from './components/GeminiChatAssistant';
+import { VoiceLiveConversation } from './components/VoiceLiveConversation';
+import { VeoVideoGenerator } from './components/VeoVideoGenerator';
 import { DocsModal } from './components/DocsModal';
+import { AcademicReportModal } from './components/AcademicReportModal';
 import { MODEL_BENCHMARKS, DISSERTATION_META } from './data/dissertationData';
 
 export default function App() {
@@ -15,6 +19,7 @@ export default function App() {
     'https://pаypal.com-verify.account-security.xyz/login'
   );
   const [isDocsModalOpen, setIsDocsModalOpen] = useState<boolean>(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState<boolean>(false);
 
   const handleSelectSampleUrl = (url: string) => {
     setInspectedUrl(url);
@@ -75,24 +80,28 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
-      {/* 3-Zone Top Navigation Bar */}
+      {/* Top Navigation Bar with Google Sign-in */}
       <Header
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         onExportCsv={handleExportCsv}
         onOpenDocModal={() => setIsDocsModalOpen(true)}
+        onOpenPdfModal={() => setIsReportModalOpen(true)}
       />
 
-      {/* Main Viewport Container (1440px baseline) */}
+      {/* Main Viewport Container */}
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8">
         {activeTab === 'overview' && (
           <OverviewView
             onNavigate={(tab) => setActiveTab(tab)}
             onSelectSampleUrl={handleSelectSampleUrl}
+            onOpenPdfModal={() => setIsReportModalOpen(true)}
           />
         )}
 
-        {activeTab === 'benchmarks' && <ModelBenchmarksView />}
+        {activeTab === 'benchmarks' && (
+          <ModelBenchmarksView onOpenPdfModal={() => setIsReportModalOpen(true)} />
+        )}
 
         {activeTab === 'loss' && <LossMetricsView />}
 
@@ -103,9 +112,15 @@ export default function App() {
         {activeTab === 'simulator' && <HybridSimulatorView />}
 
         {activeTab === 'taxonomy' && <TaxonomyView />}
+
+        {activeTab === 'ai-chat' && <GeminiChatAssistant />}
+
+        {activeTab === 'ai-voice' && <VoiceLiveConversation />}
+
+        {activeTab === 'ai-video' && <VeoVideoGenerator />}
       </main>
 
-      {/* Quiet Academic Footer */}
+      {/* Academic Footer */}
       <footer className="mt-auto border-t border-slate-900 bg-slate-950/80 py-6 text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2 font-mono">
@@ -118,6 +133,12 @@ export default function App() {
 
           <div className="flex items-center gap-4 text-slate-400">
             <span>Aligned with {DISSERTATION_META.standardCompliance}</span>
+            <button
+              onClick={() => setIsReportModalOpen(true)}
+              className="text-cyan-400 hover:text-cyan-300 underline underline-offset-4 transition-colors font-medium"
+            >
+              Academic PDF Report
+            </button>
             <button
               onClick={() => setIsDocsModalOpen(true)}
               className="hover:text-cyan-400 underline underline-offset-4 transition-colors"
@@ -132,6 +153,12 @@ export default function App() {
       <DocsModal
         isOpen={isDocsModalOpen}
         onClose={() => setIsDocsModalOpen(false)}
+      />
+
+      {/* Academic Research Report Modal */}
+      <AcademicReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
       />
     </div>
   );

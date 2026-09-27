@@ -11,17 +11,27 @@ import {
   TrendingUp,
   Cpu,
   Layers,
-  Info
+  Info,
+  FileText,
+  Grid3X3,
+  Activity
 } from 'lucide-react';
 import { MODEL_BENCHMARKS } from '../data/dissertationData';
 import { ModelMetrics } from '../types/phishing';
+import { ConfusionMatrixVisualizer } from './ConfusionMatrixVisualizer';
+import { CorrelationHeatmapVisualizer } from './CorrelationHeatmapVisualizer';
+import { ArchitecturalComparisonTable } from './ArchitecturalComparisonTable';
 
-export const ModelBenchmarksView = () => {
+interface ModelBenchmarksViewProps {
+  onOpenPdfModal?: () => void;
+}
+
+export const ModelBenchmarksView = ({ onOpenPdfModal }: ModelBenchmarksViewProps) => {
   const [filterCategory, setFilterCategory] = useState<'ALL' | 'ML' | 'DL'>('ALL');
   const [sortBy, setSortBy] = useState<keyof ModelMetrics>('accuracy');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [selectedModel, setSelectedModel] = useState<ModelMetrics>(MODEL_BENCHMARKS[0]);
-  const [activeChartTab, setActiveChartTab] = useState<'radar' | 'bars' | 'frontier'>('frontier');
+  const [activeChartTab, setActiveChartTab] = useState<'radar' | 'bars' | 'frontier' | 'matrix' | 'heatmap' | 'architecture'>('frontier');
 
   const filteredModels = MODEL_BENCHMARKS.filter((m) => {
     if (filterCategory === 'ALL') return true;
@@ -74,38 +84,67 @@ export const ModelBenchmarksView = () => {
           </p>
         </div>
 
-        {/* Filter Segmented Controls */}
-        <div className="flex items-center gap-1.5 p-1 bg-slate-900 border border-slate-800 rounded-lg">
+        {/* Actions & Filter Segmented Controls */}
+        <div className="flex flex-wrap items-center gap-2">
           <button
-            onClick={() => setFilterCategory('ALL')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-              filterCategory === 'ALL'
-                ? 'bg-slate-800 text-white font-semibold shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
+            onClick={() => {
+              const el = document.getElementById('architectural-matrix-section');
+              if (el) {
+                el.scrollIntoView({ behavior: 'smooth' });
+              } else {
+                setActiveChartTab('architecture');
+              }
+            }}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:text-white bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-cyan-500/50 rounded-lg transition-colors whitespace-nowrap shadow-sm"
+            title="Jump to Detailed Architectural Comparison Matrix (Parameters & Features)"
           >
-            All Paradigms ({MODEL_BENCHMARKS.length})
+            <Cpu className="h-3.5 w-3.5 text-cyan-400" />
+            <span>Architecture Specs</span>
           </button>
-          <button
-            onClick={() => setFilterCategory('ML')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-              filterCategory === 'ML'
-                ? 'bg-cyan-500/20 text-cyan-300 font-semibold border border-cyan-500/30'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            Traditional ML (5)
-          </button>
-          <button
-            onClick={() => setFilterCategory('DL')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-              filterCategory === 'DL'
-                ? 'bg-pink-500/20 text-pink-300 font-semibold border border-pink-500/30'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            Deep Learning (4)
-          </button>
+
+          {onOpenPdfModal && (
+            <button
+              onClick={onOpenPdfModal}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-cyan-300 hover:text-white bg-slate-900 hover:bg-slate-800 border border-cyan-500/40 hover:border-cyan-400 rounded-lg transition-colors whitespace-nowrap shadow-sm"
+              title="Generate Academic Research PDF Report"
+            >
+              <FileText className="h-3.5 w-3.5 text-cyan-400" />
+              <span>Academic PDF Report</span>
+            </button>
+          )}
+
+          <div className="flex items-center gap-1.5 p-1 bg-slate-900 border border-slate-800 rounded-lg">
+            <button
+              onClick={() => setFilterCategory('ALL')}
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                filterCategory === 'ALL'
+                  ? 'bg-slate-800 text-white font-semibold shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              All Paradigms ({MODEL_BENCHMARKS.length})
+            </button>
+            <button
+              onClick={() => setFilterCategory('ML')}
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                filterCategory === 'ML'
+                  ? 'bg-cyan-500/20 text-cyan-300 font-semibold border border-cyan-500/30'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Traditional ML (5)
+            </button>
+            <button
+              onClick={() => setFilterCategory('DL')}
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                filterCategory === 'DL'
+                  ? 'bg-pink-500/20 text-pink-300 font-semibold border border-pink-500/30'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Deep Learning (4)
+            </button>
+          </div>
         </div>
       </section>
 
@@ -128,7 +167,40 @@ export const ModelBenchmarksView = () => {
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              Efficiency Frontier (Latency vs Acc)
+              Efficiency Frontier
+            </button>
+            <button
+              onClick={() => setActiveChartTab('matrix')}
+              className={`px-3 py-1 text-xs font-medium rounded-md transition-colors flex items-center gap-1.5 ${
+                activeChartTab === 'matrix'
+                  ? 'bg-cyan-500/20 text-cyan-300 font-semibold border border-cyan-500/40 shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Grid3X3 className="h-3 w-3" />
+              <span>Confusion Matrix (DL vs ML)</span>
+            </button>
+            <button
+              onClick={() => setActiveChartTab('heatmap')}
+              className={`px-3 py-1 text-xs font-medium rounded-md transition-colors flex items-center gap-1.5 ${
+                activeChartTab === 'heatmap'
+                  ? 'bg-cyan-500/20 text-cyan-300 font-semibold border border-cyan-500/40 shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Activity className="h-3 w-3" />
+              <span>Correlation Heatmap</span>
+            </button>
+            <button
+              onClick={() => setActiveChartTab('architecture')}
+              className={`px-3 py-1 text-xs font-medium rounded-md transition-colors flex items-center gap-1.5 ${
+                activeChartTab === 'architecture'
+                  ? 'bg-cyan-500/20 text-cyan-300 font-semibold border border-cyan-500/40 shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Cpu className="h-3 w-3" />
+              <span>Architectural Specs (ML vs DL)</span>
             </button>
             <button
               onClick={() => setActiveChartTab('radar')}
@@ -138,7 +210,7 @@ export const ModelBenchmarksView = () => {
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              6-Axis Radar Comparison
+              6-Axis Radar
             </button>
             <button
               onClick={() => setActiveChartTab('bars')}
@@ -148,7 +220,7 @@ export const ModelBenchmarksView = () => {
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              Throughput &amp; RAM Bars
+              Throughput &amp; RAM
             </button>
           </div>
         </div>
@@ -438,6 +510,36 @@ export const ModelBenchmarksView = () => {
             </div>
           </div>
         )}
+
+        {/* Chart View 4: Confusion Matrix (DL vs ML) */}
+        {activeChartTab === 'matrix' && (
+          <div className="pt-2">
+            <ConfusionMatrixVisualizer
+              initialMlModelId={selectedModel.category === 'ML' ? selectedModel.id : 'rf'}
+              initialDlModelId={selectedModel.category === 'DL' ? selectedModel.id : 'distilbert'}
+            />
+          </div>
+        )}
+
+        {/* Chart View 5: Correlation Heatmap Matrix */}
+        {activeChartTab === 'heatmap' && (
+          <div className="pt-2">
+            <CorrelationHeatmapVisualizer />
+          </div>
+        )}
+
+        {/* Chart View 6: Architectural Comparison Matrix */}
+        {activeChartTab === 'architecture' && (
+          <div className="pt-2">
+            <ArchitecturalComparisonTable
+              selectedModelId={selectedModel.id}
+              onSelectModel={(id) => {
+                const found = MODEL_BENCHMARKS.find((m) => m.id === id);
+                if (found) setSelectedModel(found);
+              }}
+            />
+          </div>
+        )}
       </section>
 
       {/* Main Benchmark Data Table */}
@@ -639,6 +741,17 @@ export const ModelBenchmarksView = () => {
         </div>
       </section>
 
+      {/* Detailed Architectural Comparison Table (Traditional ML vs Deep Learning) */}
+      <section id="architectural-matrix-section">
+        <ArchitecturalComparisonTable
+          selectedModelId={selectedModel.id}
+          onSelectModel={(id) => {
+            const found = MODEL_BENCHMARKS.find((m) => m.id === id);
+            if (found) setSelectedModel(found);
+          }}
+        />
+      </section>
+
       {/* Selected Model Deep Dive Drawer */}
       <section className="p-6 rounded-xl bg-slate-900/80 border border-slate-800 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
@@ -695,6 +808,43 @@ export const ModelBenchmarksView = () => {
                 <span className={selectedModel.fnCount > 0 ? 'text-pink-400 font-bold tabular-nums' : 'text-emerald-400 font-bold tabular-nums'}>
                   {selectedModel.fnCount}
                 </span>
+              </div>
+              <div className="flex flex-col gap-1 mt-2 pt-1 border-t border-slate-800">
+                <button
+                  onClick={() => {
+                    setActiveChartTab('matrix');
+                    window.scrollTo({ top: 120, behavior: 'smooth' });
+                  }}
+                  className="inline-flex items-center gap-1.5 text-[11px] font-sans font-medium text-cyan-400 hover:text-cyan-300 hover:underline transition-colors"
+                >
+                  <Grid3X3 className="h-3 w-3" />
+                  <span>Open in Confusion Matrix Comparison</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveChartTab('heatmap');
+                    window.scrollTo({ top: 120, behavior: 'smooth' });
+                  }}
+                  className="inline-flex items-center gap-1.5 text-[11px] font-sans font-medium text-pink-400 hover:text-pink-300 hover:underline transition-colors"
+                >
+                  <Activity className="h-3 w-3" />
+                  <span>Explore Metrics Correlation Heatmap</span>
+                </button>
+                <button
+                  onClick={() => {
+                    const el = document.getElementById('architectural-matrix-section');
+                    if (el) {
+                      el.scrollIntoView({ behavior: 'smooth' });
+                    } else {
+                      setActiveChartTab('architecture');
+                      window.scrollTo({ top: 120, behavior: 'smooth' });
+                    }
+                  }}
+                  className="inline-flex items-center gap-1.5 text-[11px] font-sans font-medium text-purple-400 hover:text-purple-300 hover:underline transition-colors"
+                >
+                  <Cpu className="h-3 w-3" />
+                  <span>Inspect Parameters &amp; Feature Extraction Matrix</span>
+                </button>
               </div>
             </div>
           </div>

@@ -13,3 +13,14 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+@media print {
+  body {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+  }
+
+  header, footer, nav {
+    display: none !important;
+  }
+}
+
