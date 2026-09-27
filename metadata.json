@@ -1,0 +1,6 @@
+{
+  "name": "PhishGuard Benchmark - ML vs DL Comparative Analysis",
+  "description": "Interactive comparative analysis dashboard benchmarking traditional Machine Learning and Deep Learning models for real-time phishing URL detection based on the 2026 dissertation research.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
